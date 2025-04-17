@@ -203,3 +203,5 @@ curl -X PUT http://localhost:3000/subdomains/blog \
 - สำหรับการใช้งานจริง ควรใช้ใบรับรองที่ออกโดย Certificate Authority ที่เชื่อถือได้ (เช่น Let's Encrypt)
 - เมื่อเปิดใช้งาน HTTPS ทั่วทั้งระบบ ทุกการเข้าถึง HTTP จะถูก redirect ไปยัง HTTPS โดยอัตโนมัติ
 - หากพบว่า browser แสดงข้อความเตือนเกี่ยวกับความปลอดภัย นั่นคือปกติสำหรับใบรับรองแบบ self-signed
+
+https://prudchayapalee.medium.com/%E0%B8%97%E0%B8%B3-ssl-https-%E0%B9%82%E0%B8%94%E0%B8%A2%E0%B9%83%E0%B8%8A%E0%B9%89-lets-encrypt-cert-bot-%E0%B8%9A%E0%B8%99-nginx-%E0%B9%83%E0%B8%99%E0%B9%81%E0%B8%9A%E0%B8%9A%E0%B8%89%E0%B8%9A%E0%B8%B1%E0%B8%9A-docker-auto-renew-certificate-bc573e127f28
