@@ -1,0 +1,16 @@
+{
+  "name": "nginx-controller",
+  "version": "1.0.0",
+  "module": "src/nginx_controller.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --watch src/nginx_controller.ts",
+    "start": "bun run src/nginx_controller.ts"
+  },
+  "dependencies": {
+    "elysia": "^0.8.15"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  }
+}

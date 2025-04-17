@@ -1,0 +1,42 @@
+### แสดงรายการ Subdomain ทั้งหมด
+GET http://localhost:3000/status
+### แสดงรายการ Subdomain ทั้งหมด
+GET http://localhost:3000/subdomains
+
+### ดูรายละเอียดของ Subdomain
+GET http://localhost:3000/subdomains/blog3
+
+### สร้าง Subdomain ใหม่
+POST http://localhost:3000/subdomains
+Content-Type: application/json
+
+{
+  "subdomain": "theme2",
+  "domain": "localhost",
+  "port": 80,
+  "root_path": "/usr/share/nginx/html/theme2"
+}
+
+### สร้าง Subdomain พร้อม Custom Config
+POST http://localhost:3000/subdomains
+Content-Type: application/json
+
+{
+  "subdomain": "api",
+  "domain": "example.com",
+  "port": 80,
+  "custom_config": "server {\n    listen 80;\n    server_name api.example.com;\n    \n    location / {\n        proxy_pass http://backend:3000;\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n    }\n}"
+}
+
+### อัปเดต Subdomain
+PUT http://localhost:3000/subdomains/blog
+Content-Type: application/json
+
+{
+  "domain": "newdomain.com",
+  "ssl_enabled": true,
+  "port": 443
+}
+
+### ลบ Subdomain
+DELETE http://localhost:3000/subdomains/blog 
