@@ -1,70 +1,121 @@
-# API การจัดการ Subdomain สำหรับ NGINX
+# API การจัดการ HTTPS สำหรับ NGINX
 
-## การใช้งาน API สำหรับ Subdomain
+## การใช้งาน API สำหรับ HTTPS และ SSL
 
-API นี้ช่วยให้คุณสามารถสร้าง แสดงรายการ อัปเดต และลบ subdomain สำหรับเซิร์ฟเวอร์ NGINX ได้ผ่าน HTTP requests
+API นี้ช่วยให้คุณสามารถจัดการการทำงานของ HTTPS และใบรับรอง SSL สำหรับเซิร์ฟเวอร์ NGINX ผ่าน HTTP requests
 
 ## Endpoints
 
-### แสดงรายการ Subdomain ทั้งหมด
+### ข้อมูลสถานะของ SSL
 
 ```
-GET /subdomains
+GET /ssl
 ```
 
 **ตัวอย่างการใช้งาน:**
 
 ```bash
-curl http://localhost:3000/subdomains
-```
-
-**ตัวอย่างการตอบกลับ:**
-
-```json
-[
-  {
-    "name": "blog",
-    "domain": "example.com",
-    "config_path": "/etc/nginx/conf.d/blog.conf",
-    "port": 80,
-    "ssl_enabled": false
-  },
-  {
-    "name": "shop",
-    "domain": "example.com",
-    "config_path": "/etc/nginx/conf.d/shop.conf",
-    "port": 443,
-    "ssl_enabled": true
-  }
-]
-```
-
-### ดูรายละเอียดของ Subdomain
-
-```
-GET /subdomains/:name
-```
-
-**พารามิเตอร์:**
-
-- `name`: ชื่อ subdomain
-
-**ตัวอย่างการใช้งาน:**
-
-```bash
-curl http://localhost:3000/subdomains/blog
+curl http://localhost:3000/ssl
 ```
 
 **ตัวอย่างการตอบกลับ:**
 
 ```json
 {
-  "config_path": "/etc/nginx/conf.d/blog.conf",
-  "content": "server {\n    listen 80;\n    server_name blog.example.com;\n    root /usr/share/nginx/html;\n    index index.html index.htm;\n    location / {\n        try_files $uri $uri/ =404;\n    }\n}"
+  "enabled": true,
+  "certificates": [
+    {
+      "cert_path": "/etc/nginx/ssl/cert.pem",
+      "key_path": "/etc/nginx/ssl/key.pem",
+      "exists": true,
+      "valid_until": "2024-04-17T07:42:41.000Z"
+    }
+  ]
 }
 ```
 
-### สร้าง Subdomain ใหม่
+### สร้างใบรับรอง SSL แบบ Self-Signed
+
+```
+POST /ssl/generate
+```
+
+**Request Body:**
+
+```json
+{
+  "common_name": "example.com"
+}
+```
+
+**พารามิเตอร์:**
+
+- `common_name`: (จำเป็น) ชื่อโดเมนที่จะใช้ในใบรับรอง
+
+**ตัวอย่างการใช้งาน:**
+
+```bash
+curl -X POST http://localhost:3000/ssl/generate \
+  -H "Content-Type: application/json" \
+  -d '{"common_name":"example.com"}'
+```
+
+**ตัวอย่างการตอบกลับ:**
+
+```json
+{
+  "success": true,
+  "message": "Self-signed certificate generated successfully for example.com"
+}
+```
+
+### เปิดใช้งาน HTTPS ทั่วทั้งระบบ
+
+```
+POST /ssl/enable
+```
+
+**ตัวอย่างการใช้งาน:**
+
+```bash
+curl -X POST http://localhost:3000/ssl/enable
+```
+
+**ตัวอย่างการตอบกลับ:**
+
+```json
+{
+  "success": true,
+  "message": "Global HTTPS enabled successfully"
+}
+```
+
+### ปิดใช้งาน HTTPS ทั่วทั้งระบบ
+
+```
+POST /ssl/disable
+```
+
+**ตัวอย่างการใช้งาน:**
+
+```bash
+curl -X POST http://localhost:3000/ssl/disable
+```
+
+**ตัวอย่างการตอบกลับ:**
+
+```json
+{
+  "success": true,
+  "message": "Global HTTPS disabled successfully"
+}
+```
+
+## การสร้าง Subdomain พร้อม HTTPS
+
+คุณสามารถสร้าง subdomain พร้อมเปิดใช้งาน HTTPS ได้โดยระบุพารามิเตอร์ `ssl_enabled` และ `force_https` เมื่อสร้าง subdomain ใหม่
+
+### สร้าง Subdomain พร้อม HTTPS
 
 ```
 POST /subdomains
@@ -74,30 +125,31 @@ POST /subdomains
 
 ```json
 {
-  "subdomain": "blog",
+  "subdomain": "secure",
   "domain": "example.com",
-  "port": 80,
-  "root_path": "/usr/share/nginx/html/blog",
-  "ssl_enabled": false,
-  "custom_config": "..." // ไม่จำเป็น สามารถกำหนด config เองทั้งหมด
+  "port": 443,
+  "ssl_enabled": true,
+  "force_https": true
 }
 ```
 
-**พารามิเตอร์:**
+**พารามิเตอร์เพิ่มเติมสำหรับ HTTPS:**
 
-- `subdomain`: (จำเป็น) ชื่อ subdomain
-- `domain`: (จำเป็น) ชื่อโดเมนหลัก
-- `port`: (จำเป็น) พอร์ตที่จะใช้งาน
-- `root_path`: (ไม่จำเป็น) เส้นทางของไฟล์ root
-- `ssl_enabled`: (ไม่จำเป็น) เปิดใช้งาน SSL หรือไม่
-- `custom_config`: (ไม่จำเป็น) กำหนด config เองทั้งหมด
+- `ssl_enabled`: (boolean) เปิดใช้งาน SSL/TLS บน subdomain นี้
+- `force_https`: (boolean) สร้างกฎการ redirect จาก HTTP ไปยัง HTTPS
 
 **ตัวอย่างการใช้งาน:**
 
 ```bash
 curl -X POST http://localhost:3000/subdomains \
   -H "Content-Type: application/json" \
-  -d '{"subdomain":"blog","domain":"example.com","port":80,"root_path":"/usr/share/nginx/html/blog"}'
+  -d '{
+    "subdomain": "secure",
+    "domain": "example.com",
+    "port": 443,
+    "ssl_enabled": true,
+    "force_https": true
+  }'
 ```
 
 **ตัวอย่างการตอบกลับ:**
@@ -105,41 +157,35 @@ curl -X POST http://localhost:3000/subdomains \
 ```json
 {
   "success": true,
-  "message": "Subdomain blog.example.com created successfully",
-  "config_path": "/etc/nginx/conf.d/blog.conf"
+  "message": "Subdomain secure.example.com created successfully",
+  "config_path": "/etc/nginx/conf.d/secure.conf"
 }
 ```
 
-### อัปเดต Subdomain
+### อัปเดต Subdomain ให้รองรับ HTTPS
 
 ```
 PUT /subdomains/:name
 ```
 
-**พารามิเตอร์:**
-
-- `name`: ชื่อ subdomain
-
 **Request Body:**
 
 ```json
 {
-  "subdomain": "blog",
-  "domain": "newdomain.com",
-  "port": 443,
-  "root_path": "/usr/share/nginx/html/blog",
-  "ssl_enabled": true
+  "ssl_enabled": true,
+  "force_https": true
 }
 ```
-
-สามารถกำหนดเฉพาะพารามิเตอร์ที่ต้องการเปลี่ยนแปลงได้
 
 **ตัวอย่างการใช้งาน:**
 
 ```bash
 curl -X PUT http://localhost:3000/subdomains/blog \
   -H "Content-Type: application/json" \
-  -d '{"domain":"newdomain.com","ssl_enabled":true,"port":443}'
+  -d '{
+    "ssl_enabled": true,
+    "force_https": true
+  }'
 ```
 
 **ตัวอย่างการตอบกลับ:**
@@ -151,48 +197,9 @@ curl -X PUT http://localhost:3000/subdomains/blog \
 }
 ```
 
-### ลบ Subdomain
-
-```
-DELETE /subdomains/:name
-```
-
-**พารามิเตอร์:**
-
-- `name`: ชื่อ subdomain
-
-**ตัวอย่างการใช้งาน:**
-
-```bash
-curl -X DELETE http://localhost:3000/subdomains/blog
-```
-
-**ตัวอย่างการตอบกลับ:**
-
-```json
-{
-  "success": true,
-  "message": "Subdomain blog deleted successfully"
-}
-```
-
-## ตัวอย่างการสร้าง Subdomain ด้วย Custom Config
-
-หากต้องการกำหนด config เองทั้งหมด สามารถใช้พารามิเตอร์ `custom_config` ได้:
-
-```bash
-curl -X POST http://localhost:3000/subdomains \
-  -H "Content-Type: application/json" \
-  -d '{
-    "subdomain": "api",
-    "domain": "example.com",
-    "port": 80,
-    "custom_config": "server {\n    listen 80;\n    server_name api.example.com;\n    \n    location / {\n        proxy_pass http://backend:3000;\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n    }\n}"
-  }'
-```
-
 ## หมายเหตุ
 
-- เมื่อทำการสร้างหรืออัปเดต subdomain NGINX จะถูกรีโหลดโดยอัตโนมัติ
-- SSL configuration จะใช้ไฟล์ cert.pem และ key.pem ที่อยู่ใน `/etc/nginx/ssl/`
-- ควรแน่ใจว่ามีการตั้งค่าการชี้โดเมนที่ถูกต้อง (DNS records) สำหรับ subdomain ที่สร้างขึ้น
+- ระบบจะใช้ใบรับรอง SSL ที่อยู่ใน `/etc/nginx/ssl/cert.pem` และ `/etc/nginx/ssl/key.pem`
+- สำหรับการใช้งานจริง ควรใช้ใบรับรองที่ออกโดย Certificate Authority ที่เชื่อถือได้ (เช่น Let's Encrypt)
+- เมื่อเปิดใช้งาน HTTPS ทั่วทั้งระบบ ทุกการเข้าถึง HTTP จะถูก redirect ไปยัง HTTPS โดยอัตโนมัติ
+- หากพบว่า browser แสดงข้อความเตือนเกี่ยวกับความปลอดภัย นั่นคือปกติสำหรับใบรับรองแบบ self-signed

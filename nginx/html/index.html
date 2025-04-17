@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Welcome to NGINX!</title>
+    <title>Welcome to NGINX with Let's Encrypt!</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -12,12 +12,22 @@
         h1 {
             color: #0088cc;
         }
+        .secure {
+            color: #008800;
+            font-weight: bold;
+        }
+        .letsencrypt {
+            color: #2B3EB1;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
-    <h1>Welcome to NGINX!</h1>
-    <p>This page is being served by NGINX in a Docker container.</p>
+    <h1>Welcome to NGINX with <span class="letsencrypt">Let's Encrypt</span>!</h1>
+    <p>This page is being served by NGINX in a Docker container with HTTPS support.</p>
     <p>This NGINX instance is managed by the Elysia NGINX Controller.</p>
+    <p>This server is ready to use <span class="letsencrypt">Let's Encrypt</span> for free, automatically-renewed SSL certificates.</p>
     <p>You can create, list, update, and delete subdomains through the API!</p>
+    <p><strong>Note:</strong> For Let's Encrypt to work, your server needs to be publicly accessible on the internet with a valid domain name pointing to it.</p>
 </body>
 </html>
